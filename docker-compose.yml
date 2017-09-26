@@ -1,0 +1,106 @@
+version: "2"
+services:
+
+  muximux:
+    image: linuxserver/muximux
+    container_name: muximux
+    volumes:
+      - ${CONFIG_PATH}/muximux:/config
+    environment:
+      - PGID=100
+      - PUID=1000
+      - TZ=America/Toronto
+    ports:
+      - 80:80
+
+  glances:
+    image: nicolargo/glances
+    container_name: glances
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    pid: "host"
+    ports: 
+      - 61208:61208
+      - 61209:61209
+    environment:
+      - GLANCES_OPT=-w
+
+  plex:
+    image: linuxserver/plex
+    container_name: plex
+    volumes:
+      - ${DATA_PATH}/media/Transcode:/transcode
+      - ${CONFIG_PATH}/plex:/config
+      - ${DATA_PATH}/media:/media
+    network_mode: "host"
+    ports:
+      - "32400:32400"
+    environment:
+      - X_PLEX_TOKEN=${PLEX_TOKEN}
+      - PGID=100
+      - PUID=1000
+      - VERSION=latest
+
+  transmission:
+    image: linuxserver/transmission
+    container_name: transmission
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${CONFIG_PATH}/transmission:/config
+      - ${DATA_PATH}/files/Downloads:/downloads 
+      - ${DATA_PATH}/media:/media
+      - ${DATA_PATH}/files:/files
+    ports:
+      - 9091:9091
+      - 51413:51413
+      - 51413:51413/udp
+    restart: always
+    environment:
+      - PGID=100
+      - PUID=1000
+
+  plexpy:
+    image: linuxserver/plexpy
+    container_name: plexpy
+    volumes:
+      - ${CONFIG_PATH}/plexpy/config:/config
+      - ${CONFIG_PATH}/plex/config/Library/Application Support/Plex Media Server/Logs:/logs
+    ports:
+      - 8181:8181            
+    restart: always
+    environment:
+      - TZ=America/Toronto
+      - PGID=1000
+      - PUID=1000
+
+  sonarr:
+    image: linuxserver/sonarr
+    container_name: sonarr
+    restart: always
+    ports:
+      - "8989:8989"
+    volumes:
+      - ${CONFIG_PATH}/sonarr:/config
+      - ${DATA_PATH}/media/Series:/tv
+      - ${DATA_PATH}/files/Downloads:/downloads
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - TZ=America/Toronto
+      - PGID=1000
+      - PUID=1000
+
+  radarr:
+    image: linuxserver/radarr
+    container_name: radarr
+    restart: always
+    ports:
+      - 7878:7878
+    volumes:
+      - ${CONFIG_PATH}/radarr:/config
+      - ${DATA_PATH}/media/Movies:/movies
+      - ${DATA_PATH}/files/Downloads:/downloads
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - TZ=America/Toronto
+      - PGID=1000
+      - PUID=1000
